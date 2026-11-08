@@ -313,46 +313,46 @@ QString brk_to_str(xBrkPoint brk) {
 	switch(brk.type) {
 		case BRK_IOPORT:
 			nm = "IO";
-			ar1 = gethexword(brk.adr & 0xffff);
-			ar2 = gethexword(brk.mask & 0xffff);
+			ar1 = gethexint(brk.adr);		// IO:adr:mask:flags:action
+			ar2 = gethexint(brk.mask);
 			break;
 		case BRK_CPUADR:
 			nm = "CPU";
-			ar1 = gethexword(brk.adr & 0xffff);
+			ar1 = gethexint(brk.adr);		// CPU:adr::flags:action
 			ar2.clear();
 			if (brk.eadr > brk.adr) {
 				ar1.append("-");
-				ar1.append(gethexword(brk.eadr & 0xffff));
+				ar1.append(gethexint(brk.eadr));
 			}
 			break;
 		case BRK_MEMRAM:
-			nm = "RAM";
-			ar1 = gethexbyte((brk.adr >> 14) & 0xff);	// 16K page
-			ar2 = gethexword(brk.adr & 0x3fff);		// adr in page
+			nm = "RAM";				// RAM::adr:flags:action
+			ar1.clear(); // = gethexbyte((brk.adr >> 14) & 0xff);	// 16K page
+			ar2 = gethexint(brk.adr);		// adr in page
 			if (brk.eadr > brk.adr) {
 				ar2.append("-");
 				ar2.append(gethexword(brk.eadr & 0x3fff));
 			}
 			break;
 		case BRK_MEMROM:
-			nm = "ROM";
-			ar1 = gethexbyte((brk.adr >> 14) & 0xff);
-			ar2 = gethexword(brk.adr & 0x3fff);
+			nm = "ROM";				// ROM::adr:flags:action
+			ar1.clear(); // = gethexbyte((brk.adr >> 14) & 0xff);
+			ar2 = gethexint(brk.adr);
 			if (brk.eadr > brk.adr) {
 				ar2.append("-");
-				ar2.append(gethexword(brk.eadr & 0x3fff));
+				ar2.append(gethexint(brk.eadr));
 			}
 			break;
 		case BRK_MEMSLT:
-			nm = "SLT";
-			ar1 = gethexbyte((brk.adr >> 14) & 0xff);
-			ar2 = gethexword(brk.adr & 0x3fff);
+			nm = "SLT";				// SLT::adr:flags:action
+			ar1.clear(); // = gethexbyte((brk.adr >> 14) & 0xff);
+			ar2 = gethexint(brk.adr);
 			if (brk.eadr > brk.adr) {
 				ar2.append("-");
-				ar2.append(gethexword(brk.eadr & 0x3fff));
+				ar2.append(gethexint(brk.eadr));
 			}
 			break;
-		case BRK_IRQ:
+		case BRK_IRQ:					// IO:::flags:action
 			nm = "IRQ";
 			ar1.clear();
 			ar2.clear();
@@ -408,7 +408,7 @@ bool parseRange(QString str, xBrkPoint* p) {
 bool str_to_brk(QString str, xBrkPoint* bptr) {
 	bool b0 = true;
 	bool b1 = true;
-	int off;
+//	int off;
 	QStringList list = str.trimmed().split(":", X_KeepEmptyParts);
 	xBrkPoint brk;
 	while(list.size() < 5)
@@ -419,31 +419,31 @@ bool str_to_brk(QString str, xBrkPoint* bptr) {
 	brk.off = list.at(3).contains("0") ? 1 : 0;
 	if (list.at(0) == "IO") {
 		brk.type = BRK_IOPORT;
-		brk.adr = list.at(1).toInt(&b0, 16) & 0xffff;
-		brk.mask = list.at(2).toInt(&b1, 16) & 0xffff;
+		brk.adr = list.at(1).toInt(&b0, 16);
+		brk.mask = list.at(2).toInt(&b1, 16);
 	} else if (list.at(0) == "CPU") {
 		brk.type = BRK_CPUADR;
 		b0 = parseRange(list.at(1), &brk);
-		brk.adr &= 0xffff;
-		brk.eadr &= 0xffff;
+//		brk.adr &= 0xffff;
+//		brk.eadr &= 0xffff;
 	} else if (list.at(0) == "ROM") {
 		brk.type = BRK_MEMROM;
 		b0 = parseRange(list.at(2), &brk);
-		off = (list.at(1).toInt(&b0, 16) & 0xff) << 14;
-		brk.adr = (brk.adr & 0x3fff) | off;
-		brk.eadr = (brk.eadr & 0x3fff) | off;
+		//off = (list.at(1).toInt(&b0, 16) & 0xff) << 14;
+		//brk.adr = (brk.adr & 0x3fff) | off;
+		//brk.eadr = (brk.eadr & 0x3fff) | off;
 	} else if (list.at(0) == "RAM") {
 		brk.type = BRK_MEMRAM;
 		b0 = parseRange(list.at(2), &brk);
-		off = (list.at(1).toInt(&b0, 16) & 0xff) << 14;
-		brk.adr = (brk.adr & 0x3fff) | off;
-		brk.eadr = (brk.eadr & 0x3fff) | off;
+		//off = (list.at(1).toInt(&b0, 16) & 0xff) << 14;
+		//brk.adr = (brk.adr & 0x3fff) | off;
+		//brk.eadr = (brk.eadr & 0x3fff) | off;
 	} else if (list.at(0) == "SLT") {
 		brk.type = BRK_MEMSLT;
 		b0 = parseRange(list.at(2), &brk);
-		off = (list.at(1).toInt(&b0, 16) & 0xff) << 14;
-		brk.adr = (brk.adr & 0x3fff) | off;
-		brk.eadr = (brk.eadr & 0x3fff) | off;
+		//off = (list.at(1).toInt(&b0, 16) & 0xff) << 14;
+		//brk.adr = (brk.adr & 0x3fff) | off;
+		//brk.eadr = (brk.eadr & 0x3fff) | off;
 	} else if (list.at(0) == "IRQ") {
 		brk.type = BRK_IRQ;
 	} else {

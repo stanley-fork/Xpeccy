@@ -145,6 +145,7 @@ void load_xmap(QString path) {
 							brkAdd(brk);
 						}
 					}
+					qb.close();
 				} else {
 					file.seek(file.pos() + len);
 				}

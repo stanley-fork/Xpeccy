@@ -41,6 +41,7 @@ int pic_check_irr(PIC* pic) {
 		if (pic->irr & msk) {			// input signal present
 			pic->num = lin;
 			pic->isr |= msk;
+			pic->irr &= ~msk;
 			if (pic->master && (pic->icw3 & msk)) {		// slave pic on this line
 				pic->vec = -1;
 			} else {
@@ -85,7 +86,7 @@ void pic_eoi(PIC* pic, int num) {
 		if (!pic->smm || !(pic->imr & (1 << num))) {	// not in special mask mode or not masked
 			pic->isr &= ~(1 << num);
 		}
-		pic->irr &= ~(1 << num);
+		//pic->irr &= ~(1 << num);
 		pic_check_irr(pic);
 	}
 }
